@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Mini App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 30px;
+      padding: 20px;
+    }
+    h1 {
+      color: #0088cc;
+    }
+    .user-info img {
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+    }
+    .user-info {
+      margin-bottom: 20px;
+    }
+    .balance {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+    .daily-button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .daily-button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Telegram Mini App</h1>
+  <div class="user-info">
+    <img id="profile-pic" src="" alt="Profile Picture">
+    <p><strong>Name:</strong> <span id="name">Unknown</span></p>
+    <p><strong>Username:</strong> <span id="username">Unknown</span></p>
+  </div>
+  <div class="balance">
+    <strong>Balance:</strong> <span id="balance">0</span>
+  </div>
+  <button id="daily-button" class="daily-button" onclick="claimDaily()">Claim Daily Reward</button>
+  
+  <script>
+    // استفاده از Telegram WebApp API
+    const tg = window.Telegram.WebApp;
+
+    // اطلاعات کاربر
+    const user = tg.initDataUnsafe.user;
+
+    // نمایش نام، عکس و نام‌کاربری
+    if (user) {
+      document.getElementById('name').textContent = user.first_name || "Unknown";
+      document.getElementById('username').textContent = user.username || "Unknown";
+      document.getElementById('profile-pic').src = user.photo_url || "https://via.placeholder.com/100";
+    }
+
+    // دریافت و ذخیره بلانس از LocalStorage
+    let balance = parseInt(localStorage.getItem('balance')) || 0;
+    document.getElementById('balance').textContent = balance;
+
+    // بررسی زمان آخرین کلیک
+    const lastClaimTime = parseInt(localStorage.getItem('lastClaimTime')) || 0;
+    const now = Date.now();
+
+    const dailyButton = document.getElementById('daily-button');
+    if (now - lastClaimTime < 24 * 60 * 60 * 1000) {
+      dailyButton.disabled = true; // دکمه غیرفعال
+      const timeLeft = 24 * 60 * 60 * 1000 - (now - lastClaimTime);
+      setTimeout(() => {
+        dailyButton.disabled = false; // دکمه بعد از ۲۴ ساعت فعال می‌شود
+      }, timeLeft);
+    }
+
+    // عملکرد دکمه Claim Daily
+    function claimDaily() {
+      if (!dailyButton.disabled) {
+        balance += 1; // افزایش بلانس
+        document.getElementById('balance').textContent = balance;
+
+        // ذخیره در LocalStorage
+        localStorage.setItem('balance', balance);
+        localStorage.setItem('lastClaimTime', Date.now());
+
+        // غیرفعال کردن دکمه
+        dailyButton.disabled = true;
+
+        // تنظیم تایمر برای فعال شدن دکمه بعد از ۲۴ ساعت
+        setTimeout(() => {
+          dailyButton.disabled = false;
+        }, 24 * 60 * 60 * 1000);
+      }
+    }
+
+    // فعال‌کردن تم متناسب با تلگرام
+    tg.expand();
+  </script>
+</body>
+</html>
